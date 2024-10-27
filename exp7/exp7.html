@@ -32,48 +32,37 @@
     <div id="regression-plot" class="chart-container"></div>
 
 <script>
-// Static data
-const rawData = [
-    {
-        "Segment": "Government",
-        "Country": "Canada",
-        "Product": "Carretera",
-        "Discount Band": "None",
-        "Units Sold": "$1,618.50",
-        "Manufacturing Price": "$3.00",
-        "Sale Price": "$20.00",
-        "Gross Sales": "$32,370.00",
-        "Discounts": "$-",
-        "Sales": "$32,370.00",
-        "COGS": "$16,185.00",
-        "Profit": "$16,185.00",
-        "Date": "1/1/2014",
-        "Month Name": "January",
-        "Year": "2014"
-    },
-    // ... Add all other data rows here ...
-];
-
-// Clean and parse the data
-const data = rawData.map(d => ({
-    Segment: d.Segment,
-    Country: d.Country,
-    Product: d.Product,
-    'Discount Band': d['Discount Band'],
-    'Units Sold': parseFloat(d['Units Sold'].replace('$', '').replace(',', '')),
-    'Manufacturing Price': parseFloat(d['Manufacturing Price'].replace('$', '')),
-    'Sale Price': parseFloat(d['Sale Price'].replace('$', '')),
-    'Gross Sales': parseFloat(d['Gross Sales'].replace('$', '').replace(',', '')),
-    Sales: parseFloat(d.Sales.replace('$', '').replace(',', '')),
-    COGS: parseFloat(d.COGS.replace('$', '').replace(',', '')),
-    Profit: parseFloat(d.Profit.replace('$', '').replace(',', '')),
-    Date: new Date(d.Date),
-    Month: d['Month Name'],
-    Year: parseInt(d.Year)
-}));
+// Load data from CSV file
+d3.csv("./financial_data.csv").then(rawData => {
+        // Clean and parse the data
+        const data = rawData.map(d => ({
+        Segment: d.Segment,
+        Country: d.Country,
+        Product: d.Product,
+        'Discount Band': d['Discount Band'],
+        'Units Sold': d['Units Sold'] ? parseFloat(d['Units Sold'].replace('$', '').replace(',', '')) : 0,
+        'Manufacturing Price': d['Manufacturing Price'] ? parseFloat(d['Manufacturing Price'].replace('$', '')) : 0,
+        'Sale Price': d['Sale Price'] ? parseFloat(d['Sale Price'].replace('$', '')) : 0,
+        'Gross Sales': d['Gross Sales'] ? parseFloat(d['Gross Sales'].replace('$', '').replace(',', '')) : 0,
+        Sales: d.Sales ? parseFloat(d.Sales.replace('$', '').replace(',', '')) : 0,
+        COGS: d.COGS ? parseFloat(d.COGS.replace('$', '').replace(',', '')) : 0,
+        Profit: d.Profit ? parseFloat(d.Profit.replace('$', '').replace(',', '')) : 0,
+        Date: d.Date ? new Date(d.Date) : null,
+        Month: d['Month Name'],
+        Year: parseInt(d.Year) || 0
+    }));
+        // Call the visualization functions with the data
+        createBarChart(data);
+        createPieChart(data);
+        createHistogram(data);
+        createTimelineChart(data);
+        createScatterPlot(data);
+        createBubblePlot(data);
+        createBoxPlot(data);
+    }).catch(error => console.error(error));
 
 // Visualization functions
-function createBarChart() {
+function createBarChart(data) {
     const width = 600;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -128,7 +117,7 @@ function createBarChart() {
 }
 
 // 2. Pie Chart
-function createPieChart() {
+function createPieChart(data) {
     const width = 400;
     const height = 400;
     const radius = Math.min(width, height) / 2;
@@ -182,7 +171,7 @@ function createPieChart() {
         .text(d => d.data[0]);
 }
 
-function createHistogram() {
+function createHistogram(data) {
     const width = 600;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -230,7 +219,7 @@ function createHistogram() {
         .text("Distribution of Units Sold");
 }
 
-function createTimelineChart() {
+function createTimelineChart(data) {
     const width = 800;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -285,7 +274,7 @@ function createTimelineChart() {
 }
 
 // 5. Scatter Plot
-function createScatterPlot() {
+function createScatterPlot(data) {
     const width = 600;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -336,7 +325,7 @@ function createScatterPlot() {
 }
 
 // 6. Bubble Plot
-function createBubblePlot() {
+function createBubblePlot(data) {
     const width = 600;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -391,7 +380,7 @@ function createBubblePlot() {
 }
 
 // 7. Box Plot
-function createBoxPlot() {
+function createBoxPlot(data) {
     const width = 600;
     const height = 400;
     const margin = {top: 20, right: 20, bottom: 60, left: 60};
@@ -492,13 +481,7 @@ function createBoxPlot() {
 
 
 // Initialize all visualizations
-createBarChart();
-createPieChart();
-createHistogram();
-createTimelineChart();
-createBoxPlot();
-createBubblePlot();
-createScatterPlot();
+
 // ... Add calls to other visualization functions
 
 </script>
