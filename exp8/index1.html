@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Cover Type Analysis Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 900px;
+            text-align: center;
+        }
+        h1 {
+            color: #3b5998;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
+        select {
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Forest Cover Type Analysis Dashboard</h1>
+        <select id="chartTypeSelector">
+            <option value="bar">Bar Chart</option>
+            <option value="pie">Pie Chart</option>
+            <option value="scatter">Scatter Plot</option>
+            <option value="bubble">Bubble Chart</option>
+            <option value="timeline">Timeline Chart</option>
+        </select>
+        <div class="chart-container">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('myChart').getContext('2d');
+        let myChart;
+
+        const sampleData = {
+            labels: ["2,400", "2,500", "2,600", "2,700", "2,800", "2,900", "3,000", "3,100", "3,200"],
+            values: [50000, 100000, 150000, 200000, 250000, 300000, 200000, 150000, 100000]
+        };
+
+        function drawChart(type) {
+            if (myChart) myChart.destroy();
+
+            let config;
+
+            if (type === 'bar') {
+                config = {
+                    type: 'bar',
+                    data: {
+                        labels: sampleData.labels,
+                        datasets: [{
+                            label: "Distribution of Forest Cover Types",
+                            data: sampleData.values,
+                            backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#FF6384", "#36A2EB", "#FFCE56"],
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Forest Cover Types' }},
+                            y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+                        }
+                    }
+                };
+            } else if (type === 'pie') {
+                config = {
+                    type: 'pie',
+                    data: {
+                        labels: sampleData.labels,
+                        datasets: [{
+                            label: "Distribution of Forest Cover Types",
+                            data: sampleData.values,
+                            backgroundColor: ["#FF6384", "#36A2EB", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#FF6384", "#36A2EB", "#FFCE56"]
+                        }]
+                    },
+                    options: { responsive: true }
+                };
+            } else if (type === 'scatter') {
+                config = {
+                    type: 'scatter',
+                    data: {
+                        datasets: [{
+                            label: "Scatter Plot of Forest Cover Types",
+                            data: sampleData.labels.map((label, index) => ({
+                                x: parseFloat(label.replace(",", "")),
+                                y: sampleData.values[index]
+                            })),
+                            backgroundColor: "#36A2EB"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Forest Cover Types' }},
+                            y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+                        }
+                    }
+                };
+            } else if (type === 'bubble') {
+                config = {
+                    type: 'bubble',
+                    data: {
+                        datasets: [{
+                            label: "Bubble Chart of Forest Cover Types",
+                            data: sampleData.labels.map((label, index) => ({
+                                x: parseFloat(label.replace(",", "")),
+                                y: sampleData.values[index],
+                                r: Math.sqrt(sampleData.values[index]) / 500
+                            })),
+                            backgroundColor: "#FF6384"
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { title: { display: true, text: 'Forest Cover Types' }},
+                            y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+                        }
+                    }
+                };
+            } else if (type === 'timeline') {
+                config = {
+                    type: 'line',
+                    data: {
+                        labels: ['2021-01-01', '2021-02-01', '2021-03-01', '2021-04-01', '2021-05-01'],
+                        datasets: [{
+                            label: "Timeline of Forest Cover Counts",
+                            data: [
+                                { x: '2021-01-01', y: 50000 },
+                                { x: '2021-02-01', y: 100000 },
+                                { x: '2021-03-01', y: 150000 },
+                                { x: '2021-04-01', y: 200000 },
+                                { x: '2021-05-01', y: 250000 }
+                            ],
+                            fill: false,
+                            borderColor: "#FF9F40",
+                            tension: 0.1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: { type: 'time', title: { display: true, text: 'Date' }},
+                            y: { title: { display: true, text: 'Count' }, beginAtZero: true }
+                        }
+                    }
+                };
+            }
+
+            myChart = new Chart(ctx, config);
+        }
+
+        document.getElementById('chartTypeSelector').addEventListener('change', function() {
+            drawChart(this.value);
+        });
+
+        drawChart('bar');
+    </script>
+</body>
+</html>

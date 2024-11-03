@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Data Advanced Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2em;
+            margin: 20px 0;
+        }
+        h2 {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #chart-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        select {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 1em;
+        }
+        .tooltip {
+            position: absolute;
+            text-align: center;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            border-radius: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        .axis-label {
+            font-size: 12px;
+            font-weight: bold;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Forest Data Advanced Visualization</h1>
+        <h2>3D Scatter Plot and Jitter Plot Analysis</h2>
+        <div id="chart-controls">
+            <select id="chartType">
+                <option value="3d">3D Scatter Plot</option>
+                <option value="jitter">Jitter Plot</option>
+            </select>
+            <select id="xFeature">
+                <option value="elevation">Elevation</option>
+                <option value="aspect">Aspect</option>
+            </select>
+            <select id="yFeature">
+                <option value="slope">Slope</option>
+                <option value="aspect">Aspect</option>
+            </select>
+        </div>
+        <div id="mainChart"></div>
+    </div>
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script>
+        // Sample Data Generator
+        const generateSampleData = () => {
+            const coverTypes = [
+                'Spruce/Fir', 'Lodgepole Pine', 'Ponderosa Pine',
+                'Cottonwood/Willow', 'Aspen', 'Douglas-fir', 'Krummholz'
+            ];
+
+            const data = [];
+            coverTypes.forEach(type => {
+                for (let i = 0; i < 100; i++) {
+                    data.push({
+                        coverType: type,
+                        elevation: 2000 + Math.random() * 2000 + (Math.random() - 0.5) * 500,
+                        slope: Math.max(0, Math.min(60, 20 + (Math.random() - 0.5) * 40)),
+                        aspect: Math.random() * 360
+                    });
+                }
+            });
+            return data;
+        };
+
+        const data = generateSampleData();
+
+        // Set up dimensions
+        const margin = { top: 40, right: 60, bottom: 80, left: 80 };
+        const width = 800 - margin.left - margin.right;
+        const height = 500 - margin.top - margin.bottom;
+
+        // Create SVG container
+        const svg = d3.select('#mainChart')
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+        // Create tooltip
+        const tooltip = d3.select('body')
+            .append('div')
+            .attr('class', 'tooltip')
+            .style('opacity', 0);
+
+        // Function to draw chart
+        function drawChart(chartType, xFeature, yFeature) {
+            svg.selectAll('*').remove();
+
+            const x = d3.scaleLinear()
+                .domain(d3.extent(data, d => d[xFeature]))
+                .range([0, width])
+                .nice();
+
+            const y = d3.scaleLinear()
+                .domain(d3.extent(data, d => d[yFeature]))
+                .range([height, 0])
+                .nice();
+
+            const color = d3.scaleOrdinal()
+                .domain(data.map(d => d.coverType))
+                .range(d3.schemeSet3);
+
+            if (chartType === '3d') {
+                const z = d3.scaleLinear()
+                    .domain(d3.extent(data, d => d.aspect))
+                    .range([2, 10]);
+
+                svg.selectAll('circle')
+                    .data(data)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', d => x(d[xFeature]))
+                    .attr('cy', d => y(d[yFeature]))
+                    .attr('r', d => z(d.aspect))
+                    .style('fill', d => color(d.coverType))
+                    .on('mouseover', function (event, d) {
+                        d3.select(this).style('stroke-width', '2px');
+                        tooltip.transition().duration(200).style('opacity', .9);
+                        tooltip.html(`<strong>${d.coverType}</strong><br/>${xFeature}: ${d[xFeature].toFixed(1)}<br/>${yFeature}: ${d[yFeature].toFixed(1)}<br/>Aspect: ${d.aspect.toFixed(1)}`)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 28) + 'px');
+                    })
+                    .on('mouseout', function () {
+                        d3.select(this).style('stroke-width', '0.5px');
+                        tooltip.transition().duration(500).style('opacity', 0);
+                    });
+            } else if (chartType === 'jitter') {
+                const jitterWidth = 40;
+                const jitteredData = data.map(d => ({
+                    ...d,
+                    jitterX: d[xFeature] + (Math.random() - 0.5) * jitterWidth,
+                    jitterY: d[yFeature] + (Math.random() - 0.5) * jitterWidth
+                }));
+
+                svg.selectAll('circle')
+                    .data(jitteredData)
+                    .enter()
+                    .append('circle')
+                    .attr('cx', d => x(d.jitterX))
+                    .attr('cy', d => y(d.jitterY))
+                    .attr('r', 5)
+                    .style('fill', d => color(d.coverType))
+                    .on('mouseover', function (event, d) {
+                        d3.select(this).style('stroke-width', '2px');
+                        tooltip.transition().duration(200).style('opacity', .9);
+                        tooltip.html(`<strong>${d.coverType}</strong><br/>${xFeature}: ${d.jitterX.toFixed(1)}<br/>${yFeature}: ${d.jitterY.toFixed(1)}<br/>Aspect: ${d.aspect.toFixed(1)}`)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 28) + 'px');
+                    })
+                    .on('mouseout', function () {
+                        d3.select(this).style('stroke-width', '0.5px');
+                        tooltip.transition().duration(500).style('opacity', 0);
+                    });
+            }
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .attr('class', 'axis');
+
+            svg.append('g')
+                .call(d3.axisLeft(y))
+                .attr('class', 'axis');
+
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + margin.bottom - 10)
+                .attr('text-anchor', 'middle')
+                .text(xFeature.charAt(0).toUpperCase() + xFeature.slice(1))
+                .attr('class', 'axis-label');
+
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('x', -height / 2)
+                .attr('y', -margin.left + 20)
+                .attr('text-anchor', 'middle')
+                .text(yFeature.charAt(0).toUpperCase() + yFeature.slice(1))
+                .attr('class', 'axis-label');
+        }
+
+        // Event listeners
+        document.getElementById('chartType').addEventListener('change', updateChart);
+        document.getElementById('xFeature').addEventListener('change', updateChart);
+        document.getElementById('yFeature').addEventListener('change', updateChart);
+
+function updateChart() {
+    const chartType = document.getElementById('chartType').value;
+    const xFeature = document.getElementById('xFeature').value;
+    const yFeature = document.getElementById('yFeature').value;
+    drawChart(chartType, xFeature, yFeature);
+}
+
+// Initial chart load
+updateChart();
+</script>
+</body>
+</html>
